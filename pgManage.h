@@ -14,23 +14,27 @@ class pgmanage {
 
 public:
     pgmanage() {};
-    struct ComparePackageByDistanceGreater {
+    
+    // Comparator for Max Heap
+    struct ComparePackageByDistance1 {
         bool operator()(const package* a, const package* b) const {
             return a->getDistance() < b->getDistance();
         }
     };
-    struct ComparePackageByDistanceLess {
+    
+    // Comparator for Min Heap
+    struct ComparePackageByDistance2 {
         bool operator()(const package* a, const package* b) const {
             return a->getDistance() > b->getDistance();
         }
     };
-    LinkedList<package*> allPgs;
-    LinkedList<package*> proPgs;
-    Queue<package*> pgQ;
-    Vector<package*, ComparePackageByDistanceGreater> pgHeapMax;
-    Vector<package*, ComparePackageByDistanceLess> pgHeapMin;
-    package* pgSearch(LinkedList<package*>& LinkedList);
     
+    LinkedList<package*> allPgs;                //linked list that stores all the packages
+    LinkedList<package*> proPgs;                //linked list that stores all the unsent packages
+    Vector<package*, ComparePackageByDistance1> pgHeapMax;  
+    Vector<package*, ComparePackageByDistance2> pgHeapMin;
+
+    package* pgSearch(LinkedList<package*>& LinkedList);
     void pgChgStatus();
     void man();
     void pgSendingQ();
@@ -42,8 +46,6 @@ public:
 
 void pgmanage::man() {
     while (true) {
-        // pgHeapMax.buildHeap();
-        // pgHeapMin.buildHeap();
         string c, c1;
         cout << "1. adding new package\n2. sending package\n3. track a package\n4. update the status\n exit. goodbye\n";
         cin >> c;
@@ -59,17 +61,16 @@ void pgmanage::man() {
             }
         } else if (c == "3") {
             showStatus();    
-        } 
-        else if(c == "4"){
+        } else if(c == "4"){
             pgChgStatus();
-        }
-        else if(c == "exit"){
+        } else if(c == "exit"){
             break;
         }
     }
 }
 
 void pgmanage::showStatus() {
+    // Display the status of a package
     package* pg = pgSearch(allPgs);
     if (pg == nullptr)
         return;
@@ -87,9 +88,11 @@ void pgmanage::showStatus() {
 }
 
 void pgmanage::pgChgStatus() {
+    // Change the status of a package
     package* pg = pgSearch(allPgs);
     if (pg == nullptr)
         return;
+    // Prevent status change if received
     if (pg->ifrec()) {
         cout << "the package is received, you can't change the status.\n";
         return;
@@ -99,7 +102,7 @@ void pgmanage::pgChgStatus() {
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     std::getline(std::cin, st);
     bool check = pg->status.reTop() == "sent";
-    pg->updateStatus(st);
+    pg->updateStatus(st);       // Update the status
     if(pg->ifrec() && check) return;
     if(pg->ifrec() || pg->status.reTop() == "sent"){
         proPgs.deleteNode(pg);
@@ -115,6 +118,7 @@ void pgmanage::pgChgStatus() {
 }
 
 package* pgmanage::pgSearch(LinkedList<package*>& LinkedList) {
+    // Search for a package by tracking number in the linked list
     int tr;
     cout << "Enter the tracking code: ";
     cin >> tr;
@@ -131,6 +135,7 @@ package* pgmanage::pgSearch(LinkedList<package*>& LinkedList) {
 }
 
 void pgmanage::addPg() {
+    // Add a new package
     string pgName, sender, receiver;
     long long dis;
     cout << "enter package name, sender, receiver and distance in order\n";
@@ -138,7 +143,6 @@ void pgmanage::addPg() {
 
     package* pg = new package(pgName, sender, receiver, dis);
 
-    pgQ.enqueue(pg);
     allPgs.insert(pg);
     pgHeapMax.push(pg);
     pgHeapMin.push(pg);
@@ -148,6 +152,7 @@ void pgmanage::addPg() {
 }
 
 void pgmanage::pgSendingDis() {
+    // Send a package based on minimum or maximum distance
     if (pgHeapMax.empty()) {
         cout << "no remaining package." << endl;
         return;
@@ -195,6 +200,7 @@ void pgmanage::pgSendingDis() {
 }
 
 void pgmanage::pgSendingQ() {
+    // Send a package based on a queue 
     if (proPgs.reHead() == nullptr) {
         cout << "no remaining package." << endl;
         return;
@@ -217,7 +223,6 @@ void pgmanage::pgSendingQ() {
     cout<<"Package sent:";
     proPgs.reHead()->data->show();
     proPgs.pop();
-
 }
 
 #endif
